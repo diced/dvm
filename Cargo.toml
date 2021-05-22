@@ -1,8 +1,16 @@
 [package]
 name = "dvm"
-version = "0.1.0"
+description = "discord version manager for linux"
+homepage = "https://github.com/diced/dvm"
+repository = "https://github.com/diced/dvm.git"
+license = "MIT"
+version = "0.1.1"
 authors = ["diced <pranaco2@gmail.com>"]
 edition = "2018"
+
+[[bin]]
+name = "dvm"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

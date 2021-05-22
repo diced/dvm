@@ -1,6 +1,5 @@
-use dvm::{Res, error, install::install, r#type::Type, remove::remove, update::update};
+use dvm::{Res, error, r#type::Type, install::install, remove::remove, update::update, show::show};
 use clap::{AppSettings, Clap};
-
 #[derive(Clap, Debug)]
 #[clap(version = "0.1.0")]
 #[clap(setting = AppSettings::ColoredHelp)]
@@ -11,9 +10,17 @@ struct Opts {
 
 #[derive(Clap, Debug)]
 enum Command {
+  #[clap(about = "install the latest <type> of discord")]
   Install(InstallOption),
+
+  #[clap(about = "update to the latest <type> of discord")]
   Update(UpdateOption),
+
+  #[clap(about = "remove the installed <type> of discord")]
   Remove(RemoveOption),
+
+  #[clap(about = "show all installed versions")]
+  Show
 }
 
 #[derive(Clap, Debug)]
@@ -58,7 +65,10 @@ async fn main() -> Res<()> {
     Command::Remove(opt) => {
       remove(str_to_type(opt.r#type)).await?;
     }
-  }
+    Command::Show => {
+      show().await?;
+    }
+  };
 
   Ok(())
 }

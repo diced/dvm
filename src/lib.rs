@@ -1,7 +1,8 @@
 pub mod install;
 pub mod remove;
-pub mod r#type;
 pub mod update;
+pub mod show;
+pub mod r#type;
 
 pub type Res<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 

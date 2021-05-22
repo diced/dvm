@@ -6,7 +6,7 @@ pub fn dirent(dirent: DirEntry) -> Res<(String, Type)> {
   let rl_type = match dirent.file_name().to_str().unwrap() {
     "Discord" => Type::STABLE,
     "DiscordCanary" => Type::CANARY,
-    "DiscordPtb" => Type::PTB,
+    "DiscordPTB" => Type::PTB,
     "DiscordDevelopment" => Type::DEVELOPMENT,
     _ => Type::STABLE
   };

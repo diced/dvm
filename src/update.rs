@@ -17,7 +17,7 @@ pub async fn update(release_type: Type) -> Res<()> {
 
   let pascal_pkg = match release_type {
     Type::STABLE => "Discord",
-    Type::PTB => "DiscordPtb",
+    Type::PTB => "DiscordPTB",
     Type::CANARY => "DiscordCanary",
     Type::DEVELOPMENT => "DiscordDevelopment"
   };

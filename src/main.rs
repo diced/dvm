@@ -1,7 +1,7 @@
 use dvm::{Res, error, r#type::Type, install::install, remove::remove, update::update, show::show};
 use clap::{AppSettings, Clap};
 #[derive(Clap, Debug)]
-#[clap(version = "0.1.0")]
+#[clap(version = "0.1.1")]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
   #[clap(subcommand)]

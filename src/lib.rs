@@ -16,7 +16,7 @@ pub fn info(text: impl Into<String>) {
 }
 
 pub fn success(text: impl Into<String>) {
-  println!("\n{}{}success:{} {}", Bold, Fg(Green), Reset, text.into());
+  println!("\n\t{}{}success:{} {}\n", Bold, Fg(Green), Reset, text.into());
 }
 
 pub fn error(text: impl Into<String>) {

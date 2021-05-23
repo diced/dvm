@@ -28,19 +28,19 @@ enum Command {
 #[derive(Clap, Debug)]
 struct InstallOption {
   #[clap(possible_values = POSSIBLE_VALUES)]
-  r#type: String
+  r#type: Vec<String>
 }
 
 #[derive(Clap, Debug)]
 struct UpdateOption {
   #[clap(possible_values = POSSIBLE_VALUES)]
-  r#type: String
+  r#type: Vec<String>
 }
 
 #[derive(Clap, Debug)]
 struct RemoveOption {
   #[clap(possible_values = POSSIBLE_VALUES)]
-  r#type: String
+  r#type: Vec<String>
 }
 
 fn str_to_type(s: String) -> Type {
@@ -63,13 +63,19 @@ async fn main() -> Res<()> {
 
   match opts.command {
     Command::Install(opt) => {
-      install(str_to_type(opt.r#type)).await?;
+      for r#type in opt.r#type {
+        install(str_to_type(r#type)).await?;
+      }
     }
     Command::Update(opt) => {
-      update(str_to_type(opt.r#type)).await?;
+      for r#type in opt.r#type {
+        update(str_to_type(r#type)).await?;
+      }
     }
     Command::Remove(opt) => {
-      remove(str_to_type(opt.r#type)).await?;
+      for r#type in opt.r#type {
+        remove(str_to_type(r#type)).await?;
+      }
     }
     Command::Show => {
       show().await?;

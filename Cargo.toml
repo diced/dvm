@@ -4,7 +4,7 @@ description = "discord version manager for linux"
 homepage = "https://github.com/diced/dvm"
 repository = "https://github.com/diced/dvm.git"
 license = "MIT"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["diced <pranaco2@gmail.com>"]
 edition = "2018"
 

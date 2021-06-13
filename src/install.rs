@@ -1,32 +1,35 @@
 use std::{collections::HashMap, env, fs, path::Path};
 
-use crate::{Res, error, info, r#type::Type, success};
+use crate::{error, info, r#type::Type, success, Res};
 use tokio::process::Command;
 
-pub async fn install(release_type: Type) -> Res<()> {
+pub async fn install(release_type: Type, verbose: bool) -> Res<()> {
   // create user var & create .dvm dirs
   let user = env::var("USER")?;
   fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
+  if verbose {
+    info("created .dvm dir")
+  }
 
   let pkg_name = match release_type {
     Type::STABLE => "discord",
     Type::PTB => "discord-ptb",
     Type::CANARY => "discord-canary",
-    Type::DEVELOPMENT => "discord-development"
+    Type::DEVELOPMENT => "discord-development",
   };
 
   let pascal_pkg = match release_type {
     Type::STABLE => "Discord",
     Type::PTB => "DiscordPTB",
     Type::CANARY => "DiscordCanary",
-    Type::DEVELOPMENT => "DiscordDevelopment"
+    Type::DEVELOPMENT => "DiscordDevelopment",
   };
 
   let dl_sub = match release_type {
     Type::STABLE => "dl",
     Type::PTB => "dl-ptb",
     Type::CANARY => "dl-canary",
-    Type::DEVELOPMENT => "dl-development"
+    Type::DEVELOPMENT => "dl-development",
   };
 
   let exists = Path::new(&format!("/home/{}/.dvm/{}", user, pascal_pkg)).exists();
@@ -44,11 +47,14 @@ pub async fn install(release_type: Type) -> Res<()> {
   .await?
   .json::<HashMap<String, String>>()
   .await?;
+  if verbose {
+    info("requested api for latest version")
+  }
 
   // exit if the api doesn't return a name (latest version)
   let latest = match res.get("name") {
     Some(v) => v,
-    None => std::process::exit(55)
+    None => std::process::exit(55),
   };
   info(format!("found latest version {}:{}", release_type, latest));
 
@@ -63,10 +69,16 @@ pub async fn install(release_type: Type) -> Res<()> {
   .await?
   .bytes()
   .await?;
+  if verbose {
+    info("downloaded tarball")
+  }
 
   // write tar to /tmp
   let tmp_file = format!("/tmp/{}.tar.gz", tar_name);
   fs::write(&tmp_file, tar_bytes)?;
+  if verbose {
+    info("wrote tar to /tmp")
+  }
 
   // extract tar to .dvm
   Command::new("tar")
@@ -96,6 +108,9 @@ pub async fn install(release_type: Type) -> Res<()> {
     .spawn()?
     .wait()
     .await?;
+  if verbose {
+    info("changing bin locations in desktop entries")
+  }
 
   // write a shell script to .dvm/bin to run discord
   let bin_path = format!("/home/{}/.dvm/bin/{}", user, pkg_name);
@@ -104,8 +119,11 @@ pub async fn install(release_type: Type) -> Res<()> {
     format!(
       "#!/bin/sh\n/home/{}/.dvm/{}/{} \"$@\"\n",
       user, pascal_pkg, pascal_pkg
-    )
+    ),
   )?;
+  if verbose {
+    info("created executable bin")
+  }
 
   // make bin executable
   Command::new("chmod")
@@ -114,6 +132,9 @@ pub async fn install(release_type: Type) -> Res<()> {
     .spawn()?
     .wait()
     .await?;
+  if verbose {
+    info("allowed execution for bin")
+  }
 
   // copy desktop file to .local/share/applications
   Command::new("install")
@@ -144,11 +165,17 @@ pub async fn install(release_type: Type) -> Res<()> {
   // create a file that contains the current version to use for updating
   fs::write(
     format!("/home/{}/.dvm/{}/version", user, pascal_pkg),
-    latest
+    latest,
   )?;
+  if verbose {
+    info("created version file")
+  }
 
   // remove tmp tar ball
   fs::remove_file(tmp_file)?;
+  if verbose {
+    info("remove tmp tar ball")
+  }
 
   success(format!("installed {}:{}", pkg_name, latest));
   Ok(())

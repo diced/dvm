@@ -1,46 +1,11 @@
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Type {
   STABLE,
   PTB,
   CANARY,
-  DEVELOPMENT
-}
-
-impl Into<String> for Type {
-  fn into(self) -> String {
-    match self {
-      Type::STABLE => "stable",
-      Type::PTB => "ptb",
-      Type::CANARY => "canary",
-      Type::DEVELOPMENT => "development"
-    }
-    .to_string()
-  }
-}
-
-impl Into<&str> for Type {
-  fn into(self) -> &'static str {
-    match self {
-      Type::STABLE => "stable",
-      Type::PTB => "ptb",
-      Type::CANARY => "canary",
-      Type::DEVELOPMENT => "development"
-    }
-  }
-}
-
-impl Into<Type> for String {
-  fn into(self) -> Type {
-    match self.as_str() {
-      "stable" => Type::STABLE,
-      "ptb" => Type::PTB,
-      "canary" => Type::CANARY,
-      "development" => Type::DEVELOPMENT,
-      _ => Type::STABLE
-    }
-  }
+  DEVELOPMENT,
 }
 
 impl fmt::Display for Type {
@@ -49,7 +14,7 @@ impl fmt::Display for Type {
       Type::STABLE => "stable",
       Type::PTB => "ptb",
       Type::CANARY => "canary",
-      Type::DEVELOPMENT => "development"
+      Type::DEVELOPMENT => "development",
     };
 
     write!(f, "{}", r)

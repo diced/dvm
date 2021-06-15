@@ -1,16 +1,17 @@
-use std::{collections::HashMap, env, fs, path::Path};
+use std::{collections::HashMap, fs};
 
-use crate::{error, info, r#type::Type, success, Res};
 use tokio::process::Command;
 
-pub async fn install(release_type: Type, verbose: bool) -> Res<()> {
-  // create user var & create .dvm dirs
-  let user = env::var("USER")?;
-  fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
-  if verbose {
-    info("created .dvm dir")
-  }
+use crate::{Res, error, info, r#type::Type};
 
+fn get_version(user: &str, pascal_pkg: &str) -> String {
+  fs::read_to_string(format!("/home/{}/.dvm/{}/version", user, pascal_pkg))
+    .expect("could not read version file: malformed installation detected")
+    .replace("\n", "")
+
+}
+
+pub async fn install_version(update: bool, release_type: Type, verbose: bool, user: String) -> Res<(String, String)> {
   let pkg_name = match release_type {
     Type::STABLE => "discord",
     Type::PTB => "discord-ptb",
@@ -32,13 +33,6 @@ pub async fn install(release_type: Type, verbose: bool) -> Res<()> {
     Type::DEVELOPMENT => "dl-development",
   };
 
-  let exists = Path::new(&format!("/home/{}/.dvm/{}", user, pascal_pkg)).exists();
-
-  if exists {
-    error(format!("{} is already installed", release_type));
-    std::process::exit(1);
-  }
-
   // request api for latest version
   let res = reqwest::get(format!(
     "https://discordapp.com/api/v8/updates/{}?platform=linux",
@@ -54,9 +48,30 @@ pub async fn install(release_type: Type, verbose: bool) -> Res<()> {
   // exit if the api doesn't return a name (latest version)
   let latest = match res.get("name") {
     Some(v) => v,
-    None => std::process::exit(55),
+    None => std::process::exit(1),
   };
   info(format!("found latest version {}:{}", release_type, latest));
+
+  let mut version = String::new();
+  if update {
+    version = get_version(&user, pascal_pkg);
+    // check if the version is the same & clean file of \n's
+    if verbose {
+      info("checking if existing version and latest match")
+    }
+
+    if version.eq(latest) {
+      error(format!(
+        "you already have the latest version of {}",
+        release_type
+      ));
+      std::process::exit(1);
+    }
+
+    // remove installed to make room for upgrade
+    fs::remove_dir_all(format!("/home/{}/.dvm/{}", user, pascal_pkg))?;
+    info("removing old components");
+  }
 
   // download tarball
   let tar_name = format!("{}-{}", pkg_name, latest);
@@ -177,6 +192,5 @@ pub async fn install(release_type: Type, verbose: bool) -> Res<()> {
     info("remove tmp tar ball")
   }
 
-  success(format!("installed {}:{}", pkg_name, latest));
-  Ok(())
+  Ok((latest.to_string(), version))
 }

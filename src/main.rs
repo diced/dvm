@@ -2,7 +2,7 @@
 compile_error!("can only be compiled on linux ;)");
 
 use clap::{AppSettings, Clap};
-use dvm::{error, install::install, r#type::Type, remove::remove, show::show, update::update, Res};
+use dvm::{Res, cli::{install, remove, show, update}, error, r#type::Type};
 
 const POSSIBLE_VALUES: &[&str] = &[
   "stable",
@@ -27,7 +27,7 @@ const POSSIBLE_VALUES: &[&str] = &[
 #[clap(version = "1.1.4", setting = AppSettings::ColoredHelp)]
 struct Opts {
   #[clap(subcommand)]
-  command: Command,
+  command: Command
 }
 
 #[derive(Clap, Debug)]

@@ -9,20 +9,20 @@ use colored::*;
 
 use crate::{r#type::Type, Res};
 
-pub fn dirent(dirent: DirEntry) -> Res<(String, Type)> {
-  let rl_type = match dirent.file_name().to_str().unwrap() {
-    "Discord" => Type::STABLE,
-    "DiscordCanary" => Type::CANARY,
-    "DiscordPTB" => Type::PTB,
-    "DiscordDevelopment" => Type::DEVELOPMENT,
-    _ => Type::STABLE,
-  };
-  let version = fs::read_to_string(dirent.path().join("version"))?.replace("\n", "");
+// fn dirent(dirent: DirEntry) -> Res<(String, Type)> {
+//   let rl_type = match dirent.file_name().to_str().unwrap() {
+//     "Discord" => Type::STABLE,
+//     "DiscordCanary" => Type::CANARY,
+//     "DiscordPTB" => Type::PTB,
+//     "DiscordDevelopment" => Type::DEVELOPMENT,
+//     _ => Type::STABLE,
+//   };
+//   let version = fs::read_to_string(dirent.path().join("version"))?.replace("\n", "");
 
-  Ok((version, rl_type))
-}
+//   Ok((version, rl_type))
+// }
 
-pub fn dirent_verbose(dirent: DirEntry) -> Res<(String, Type, PathBuf)> {
+fn dirent_verbose(dirent: DirEntry) -> Res<(String, Type, PathBuf)> {
   let rl_type = match dirent.file_name().to_str().unwrap() {
     "Discord" => Type::STABLE,
     "DiscordCanary" => Type::CANARY,
@@ -36,7 +36,7 @@ pub fn dirent_verbose(dirent: DirEntry) -> Res<(String, Type, PathBuf)> {
   Ok((version, rl_type, path))
 }
 
-pub async fn needs_update(version: String, release_type: Type) -> Res<(bool, String)> {
+async fn needs_update(version: String, release_type: Type) -> Res<(bool, String)> {
   let res = reqwest::get(format!(
     "https://discordapp.com/api/v8/updates/{}?platform=linux",
     release_type

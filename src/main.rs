@@ -2,29 +2,10 @@
 compile_error!("can only be compiled on linux ;)");
 
 use clap::{AppSettings, Clap};
-use dvm::{Res, cli::{install, remove, show, update}, error, r#type::Type};
-
-const POSSIBLE_VALUES: &[&str] = &[
-  "stable",
-  "discord-stable",
-  "s",
-
-  "canary",
-  "discord-canary",
-  "c",
-  
-  "ptb",
-  "discord-ptb",
-  "p",
-  
-  "development",
-  "dev",
-  "discord-development",
-  "d",
-];
+use dvm::{Res, cli::{install, remove, show, update}, common::*, common::VERSION, completions, error, r#type::Type};
 
 #[derive(Clap, Debug)]
-#[clap(version = "1.1.4", setting = AppSettings::ColoredHelp)]
+#[clap(version = VERSION, setting = AppSettings::ColoredHelp)]
 struct Opts {
   #[clap(subcommand)]
   command: Command
@@ -32,17 +13,20 @@ struct Opts {
 
 #[derive(Clap, Debug)]
 enum Command {
-  #[clap(about = "install the latest <type> of discord", aliases = &["i", "in", "get"])]
+  #[clap(about = INSTALL_DESC, aliases = INSTALL_ALIASES)]
   Install(InstallOption),
 
-  #[clap(about = "update to the latest <type> of discord", aliases = &["u", "up", "upgrade"])]
+  #[clap(about = UPDATE_DESC, aliases = UPDATE_ALIASES)]
   Update(UpdateOption),
 
-  #[clap(about = "remove the installed <type> of discord", aliases = &["r", "rm", "d", "del", "un", "uninstall"])]
+  #[clap(about = REMOVE_DESC, aliases = REMOVE_ALIASES)]
   Remove(RemoveOption),
 
-  #[clap(about = "show all installed versions", aliases = &["s", "installed", "all", "a", "versions", "types"])]
+  #[clap(about = SHOW_DESC, aliases = SHOW_ALIASES)]
   Show(ShowOption),
+
+  #[clap(about = COMP_DESC, aliases = COMP_ALIASES)]
+  Completions(CompletionsOption)
 }
 
 #[derive(Clap, Debug)]
@@ -81,6 +65,12 @@ struct ShowOption {
   check: bool,
 }
 
+#[derive(Clap, Debug)]
+struct CompletionsOption {
+  #[clap(possible_values = POSSIBLE_SHELLS)]
+  shell: String
+}
+
 fn str_to_type(s: String) -> Type {
   match s.as_str() {
     "stable" | "discord-stable" | "s" => Type::STABLE,
@@ -116,6 +106,9 @@ async fn main() -> Res<()> {
     }
     Command::Show(opt) => {
       show(opt.verbose, opt.check).await?;
+    }
+    Command::Completions(opt) => {
+      completions::give_completions(&opt.shell);
     }
   };
 

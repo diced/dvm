@@ -4,7 +4,7 @@ Allowing you to manage all of your discord versions. This was made as I was impa
 
 # Usage
 ```
-dvm 0.1.1
+dvm 1.1.4
 
 USAGE:
     dvm <SUBCOMMAND>
@@ -14,11 +14,13 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    help       Prints this message or the help of the given subcommand(s)
-    install    install the latest <type> of discord
-    remove     remove the installed <type> of discord
-    show       show all installed versions
-    update     update to the latest <type> of discord
+    completions    get shell completions
+    help           Prints this message or the help of the given subcommand(s)
+    install        install the latest <type> of discord
+    remove         remove the installed <type> of discord
+    run            run discord with specific options
+    show           show all installed versions
+    update         update to the latest <type> of discord
 ```
 
 # Installing

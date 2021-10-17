@@ -1,8 +1,10 @@
 use std::{env, fs, path::Path};
 
-use crate::{Res, error, info, r#type::Type, success, util::install_version};
+use tokio::process::Command;
 
-pub async fn update(release_type: Type, verbose: bool) -> Res<()> {
+use crate::{Res, error, info, r#type::Type};
+
+pub async fn run(release_type: Type, args: Vec<String>, verbose: bool) -> Res<()> {
   // create user var & create .dvm dirs
   let user = env::var("USER")?;
   fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
@@ -27,12 +29,10 @@ pub async fn update(release_type: Type, verbose: bool) -> Res<()> {
     error!("{} is not installed", release_type);
   }
 
-  let (latest, version) = install_version(true, release_type.clone(), verbose, user).await?;
-
-  success!(
-    "updated {}:{} -> {}:{}",
-    release_type, version, release_type, latest
-  );
+  Command::new(format!("/home/{}/.dvm/{}/{}", user, pascal_pkg, pascal_pkg))
+    .args(&args)
+    .spawn()?
+    .wait_with_output().await?;
 
   Ok(())
 }

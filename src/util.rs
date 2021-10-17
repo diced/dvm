@@ -42,7 +42,7 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
   .json::<HashMap<String, String>>()
   .await?;
   if verbose {
-    info("requested api for latest version")
+    info!("requested api for latest version")
   }
 
   // exit if the api doesn't return a name (latest version)
@@ -50,32 +50,31 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     Some(v) => v,
     None => std::process::exit(1),
   };
-  info(format!("found latest version {}:{}", release_type, latest));
+  info!("found latest version {}:{}", release_type, latest);
 
   let mut version = String::new();
   if update {
     version = get_version(&user, pascal_pkg);
     // check if the version is the same & clean file of \n's
     if verbose {
-      info("checking if existing version and latest match")
+      info!("checking if existing version and latest match")
     }
 
     if version.eq(latest) {
-      error(format!(
+      error!(
         "you already have the latest version of {}",
         release_type
-      ));
-      std::process::exit(1);
+      );
     }
 
     // remove installed to make room for upgrade
     fs::remove_dir_all(format!("/home/{}/.dvm/{}", user, pascal_pkg))?;
-    info("removing old components");
+    info!("removing old components");
   }
 
   // download tarball
   let tar_name = format!("{}-{}", pkg_name, latest);
-  info(format!("downloading version {}:{}", release_type, latest));
+  info!("downloading version {}:{}", release_type, latest);
 
   let tar_bytes = reqwest::get(format!(
     "https://{}.discordapp.net/apps/linux/{}/{}.tar.gz",
@@ -85,14 +84,14 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
   .bytes()
   .await?;
   if verbose {
-    info("downloaded tarball")
+    info!("downloaded tarball")
   }
 
   // write tar to /tmp
   let tmp_file = format!("/tmp/{}.tar.gz", tar_name);
   fs::write(&tmp_file, tar_bytes)?;
   if verbose {
-    info("wrote tar to /tmp")
+    info!("wrote tar to /tmp")
   }
 
   // extract tar to .dvm
@@ -104,10 +103,10 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     .spawn()?
     .wait()
     .await?;
-  info(format!(
+  info!(
     "extracting components to {}",
     format!("/home/{}/.dvm/{}", user, pascal_pkg)
-  ));
+  );
 
   // change Exec= to dvm path from the desktop file
   Command::new("sed")
@@ -124,7 +123,7 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     .wait()
     .await?;
   if verbose {
-    info("changing bin locations in desktop entries")
+    info!("changing bin locations in desktop entries")
   }
 
   // write a shell script to .dvm/bin to run discord
@@ -137,7 +136,7 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     ),
   )?;
   if verbose {
-    info("created executable bin")
+    info!("created executable bin")
   }
 
   // make bin executable
@@ -148,7 +147,7 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     .wait()
     .await?;
   if verbose {
-    info("allowed execution for bin")
+    info!("allowed execution for bin")
   }
 
   // copy desktop file to .local/share/applications
@@ -162,7 +161,7 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     .spawn()?
     .wait()
     .await?;
-  info("installing desktop file");
+  info!("installing desktop file");
 
   // copy icon to .local/share/icons
   fs::create_dir_all(format!("/home/{}/.local/share/icons", user))?;
@@ -175,7 +174,7 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     .spawn()?
     .wait()
     .await?;
-  info("installing icons");
+  info!("installing icons");
 
   // create a file that contains the current version to use for updating
   fs::write(
@@ -183,13 +182,13 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     latest,
   )?;
   if verbose {
-    info("created version file")
+    info!("created version file")
   }
 
   // remove tmp tar ball
   fs::remove_file(tmp_file)?;
   if verbose {
-    info("remove tmp tar ball")
+    info!("remove tmp tar ball")
   }
 
   Ok((latest.to_string(), version))

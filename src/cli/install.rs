@@ -7,7 +7,7 @@ pub async fn install(release_type: Type, verbose: bool) -> Res<()> {
   let user = env::var("USER")?;
   fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
   if verbose {
-    info("created .dvm dir")
+    info!("created .dvm dir")
   }
 
   let pascal_pkg = match release_type {
@@ -20,12 +20,11 @@ pub async fn install(release_type: Type, verbose: bool) -> Res<()> {
   let exists = Path::new(&format!("/home/{}/.dvm/{}", user, pascal_pkg)).exists();
 
   if exists {
-    error(format!("{} is already installed", release_type));
-    std::process::exit(1);
+    error!("{} is already installed", release_type);
   }
 
   let (latest, _) = install_version(false, release_type.clone(), verbose, user).await?;
 
-  success(format!("installed {}:{}", release_type, latest));
+  success!("installed {}:{}", release_type, latest);
   Ok(())
 }

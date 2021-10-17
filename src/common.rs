@@ -9,6 +9,8 @@ pub const SHOW_DESC: &str = "show all installed versions";
 pub const SHOW_ALIASES: &[&str] = &["s", "installed", "all", "a", "versions", "types"];
 pub const COMP_DESC: &str = "get shell completions";
 pub const COMP_ALIASES: &[&str] = &["c", "comp"];
+pub const RUN_DESC: &str = "run discord with specific options";
+pub const RUN_ALIASES: &[&str] =  &["r", "start", "s"];
 
 pub const POSSIBLE_SHELLS: &[&str] = &[
   "bash", "b",

@@ -4,15 +4,12 @@ description = "discord version manager for linux"
 homepage = "https://github.com/diced/dvm"
 repository = "https://github.com/diced/dvm.git"
 license = "MIT"
-version = "1.1.6"
+version = "1.1.7"
 authors = ["diced <pranaco2@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "dvm"
-
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 tokio = { version = "1.6.0", features = ["full"] }

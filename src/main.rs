@@ -2,7 +2,7 @@
 compile_error!("can only be compiled on linux ;)");
 
 use clap::{AppSettings, Clap};
-use dvm::{Res, cli::{install, remove, show, update}, common::*, common::VERSION, completions, error, r#type::Type};
+use dvm::{Res, cli::{install, remove, show, update, run}, common::*, common::VERSION, completions, error, r#type::Type};
 
 #[derive(Clap, Debug)]
 #[clap(version = VERSION, setting = AppSettings::ColoredHelp)]
@@ -26,7 +26,10 @@ enum Command {
   Show(ShowOption),
 
   #[clap(about = COMP_DESC, aliases = COMP_ALIASES)]
-  Completions(CompletionsOption)
+  Completions(CompletionsOption),
+
+  #[clap(about = RUN_DESC, aliases = RUN_ALIASES)]
+  Run(RunOptions)
 }
 
 #[derive(Clap, Debug)]
@@ -71,6 +74,18 @@ struct CompletionsOption {
   shell: String
 }
 
+#[derive(Clap, Debug)]
+struct RunOptions {
+  #[clap(short, long)]
+  verbose: bool,
+
+  #[clap(possible_values = POSSIBLE_VALUES)]
+  r#type: String,
+
+  #[clap(last = true)]
+  args: Vec<String>
+}
+
 fn str_to_type(s: String) -> Type {
   match s.as_str() {
     "stable" | "discord-stable" | "s" => Type::STABLE,
@@ -78,8 +93,7 @@ fn str_to_type(s: String) -> Type {
     "ptb" | "discord-ptb" | "p" => Type::PTB,
     "development" | "dev" | "discord-development" | "d" => Type::DEVELOPMENT,
     _ => {
-      error(format!("type \"{}\" does not exist", s));
-      std::process::exit(1);
+      error!("type \"{}\" does not exist", s);
     }
   }
 }
@@ -88,29 +102,30 @@ fn str_to_type(s: String) -> Type {
 async fn main() -> Res<()> {
   let opts = Opts::parse();
 
-  match opts.command {
+  Ok(match opts.command {
     Command::Install(opt) => {
       for r#type in opt.r#type {
-        install(str_to_type(r#type), opt.verbose).await?;
+        install(str_to_type(r#type), opt.verbose).await?
       }
     }
     Command::Update(opt) => {
       for r#type in opt.r#type {
-        update(str_to_type(r#type), opt.verbose).await?;
+        update(str_to_type(r#type), opt.verbose).await?
       }
     }
     Command::Remove(opt) => {
       for r#type in opt.r#type {
-        remove(str_to_type(r#type), opt.verbose).await?;
+        remove(str_to_type(r#type), opt.verbose).await?
       }
     }
     Command::Show(opt) => {
-      show(opt.verbose, opt.check).await?;
+      show(opt.verbose, opt.check).await?
     }
     Command::Completions(opt) => {
-      completions::give_completions(&opt.shell);
+      completions::give_completions(&opt.shell)
     }
-  };
-
-  Ok(())
+    Command::Run(opt) => {
+      run(str_to_type(opt.r#type), opt.args.clone(), opt.verbose).await?
+    }
+  })
 }

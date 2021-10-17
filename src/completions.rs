@@ -12,8 +12,7 @@ pub fn give_completions(shell: &str) {
     "powershell" | "pwsh" | "ps" | "p" => return_bash(),
     "zsh" | "z" => return_bash(),
     _ => {
-      error(format!("shell \"{}\" is not supported", shell));
-      std::process::exit(1);
+      error!("shell \"{}\" is not supported", shell);
     }
   };
 }

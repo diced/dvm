@@ -1,3 +1,5 @@
+#![feature(format_args_nl)]
+
 pub mod cli;
 pub mod util;
 pub mod r#type;
@@ -7,24 +9,33 @@ pub mod completions;
 pub type Res<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 use clap::{App, Arg};
-use colored::*;
 use common::*;
 
-pub fn info(text: impl Into<String>) {
-  println!("{}{}", "info: ".white().bold(), text.into());
+#[macro_export]
+macro_rules! info {
+  ($($arg:tt)*) => ({
+    use colored::Colorize;
+    println!("{}{}", "info: ".white().bold(), std::format_args!($($arg)*));
+  })
 }
 
-pub fn success(text: impl Into<String>) {
-  println!(
-    "\n\t{}{}\n",
-    "success: ".green().bold(),
-    text.into()
-  );
+#[macro_export]
+macro_rules! success {
+  ($($arg:tt)*) => ({
+    use colored::Colorize;
+    println!("\n\t{}{}\n", "success: ".green().bold(), std::format_args!($($arg)*));
+  })
 }
 
-pub fn error(text: impl Into<String>) {
-  println!("{}{}", "error: ".red().bold(), text.into());
+#[macro_export]
+macro_rules! error {
+  ($($arg:tt)*) => ({
+    use colored::Colorize;
+    println!("{}{}", "error: ".red().bold(), std::format_args!($($arg)*));
+    std::process::exit(1);
+  })
 }
+
 
 pub fn build_cli() -> App<'static> {
   App::new("dvm")
@@ -60,4 +71,5 @@ pub fn build_cli() -> App<'static> {
       .aliases(COMP_ALIASES)
       .arg(Arg::new("type").possible_values(POSSIBLE_SHELLS))
     )
+
 }

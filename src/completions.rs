@@ -1,23 +1,26 @@
-use clap_generate::{generate, generators::{Bash, Elvish, Fish, PowerShell, Zsh}};
+use clap_generate::{
+  generate,
+  generators::{Bash, Elvish, Fish, PowerShell, Zsh},
+};
 
-use crate::error; 
+use crate::error;
 
 const BIN: &str = "dvm";
 
 pub fn give_completions(shell: &str) {
   match shell {
     "bash" | "b" => return_bash(),
-    "elvish" | "e" => return_bash(),
-    "fish" | "f" => return_bash(),
-    "powershell" | "pwsh" | "ps" | "p" => return_bash(),
-    "zsh" | "z" => return_bash(),
+    "elvish" | "e" => return_elvish(),
+    "fish" | "f" => return_fish(),
+    "powershell" | "pwsh" | "ps" | "p" => return_powershell(),
+    "zsh" | "z" => return_zsh(),
     _ => {
       error!("shell \"{}\" is not supported", shell);
     }
   };
 }
 
-pub fn return_bash() -> Bash {
+pub fn return_bash() {
   let mut app = super::build_cli();
 
   generate::<Bash, _>(&mut app, BIN, &mut std::io::stdout());
@@ -25,7 +28,7 @@ pub fn return_bash() -> Bash {
   std::process::exit(0);
 }
 
-pub fn return_zsh() -> Zsh {
+pub fn return_zsh() {
   let mut app = super::build_cli();
 
   generate::<Zsh, _>(&mut app, BIN, &mut std::io::stdout());
@@ -33,7 +36,7 @@ pub fn return_zsh() -> Zsh {
   std::process::exit(0);
 }
 
-pub fn return_elvish() -> Elvish {
+pub fn return_elvish() {
   let mut app = super::build_cli();
 
   generate::<Elvish, _>(&mut app, BIN, &mut std::io::stdout());
@@ -41,7 +44,7 @@ pub fn return_elvish() -> Elvish {
   std::process::exit(0);
 }
 
-pub fn return_fish() -> Fish {
+pub fn return_fish() {
   let mut app = super::build_cli();
 
   generate::<Fish, _>(&mut app, BIN, &mut std::io::stdout());
@@ -49,7 +52,7 @@ pub fn return_fish() -> Fish {
   std::process::exit(0);
 }
 
-pub fn return_powershell() -> PowerShell {
+pub fn return_powershell() {
   let mut app = super::build_cli();
 
   generate::<PowerShell, _>(&mut app, BIN, &mut std::io::stdout());

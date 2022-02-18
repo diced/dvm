@@ -4,7 +4,7 @@ Allowing you to manage all of your discord versions. This was made as I was impa
 
 # Usage
 ```
-dvm 1.1.4
+dvm 1.1.8
 
 USAGE:
     dvm <SUBCOMMAND>
@@ -25,7 +25,7 @@ SUBCOMMANDS:
 
 # Installing
 To install a specific version just type in
-```
+```sh
 dvm install stable
 ```
 This will do the following:
@@ -36,13 +36,13 @@ This will do the following:
 
 ## Installing multiple versions at once
 You can install multiple versions at once, they will be executed one after the other.
-```
+```sh
 dvm install stable ptb canary development
 ```
 
 # Removing
 Removing installations is as easy as installing them
-```
+```sh
 dvm remove stable
 ```
 This will do the following:
@@ -52,7 +52,7 @@ This will do the following:
 
 # Update
 Updating installations is as easy as installing them
-```
+```sh
 dvm update stable
 ```
 This will do the following:
@@ -60,3 +60,36 @@ This will do the following:
 2. Download the latest tarball
 3. Remove the $HOME/.dvm/<installation type>
 4. Do everything the installation does.
+
+# Show
+This will show all installations that are currently installed, the `--verbose, -v` flag will show the path it's installed to, and the `--check, -c` flag will check if your installations are up-to-date (red = outdated, green = up to date)
+```sh
+dvm show
+dvm show -v
+dvm show -c
+dvm show -vc
+```
+```sh
+# no flag
+canary:0.0.133
+development:0.0.198
+stable:0.0.17
+# -v
+canary:0.0.133 -> /home/diced/.dvm/DiscordCanary
+development:0.0.198 -> /home/diced/.dvm/DiscordDevelopment
+stable:0.0.17 -> /home/diced/.dvm/Discord
+```
+
+# Run
+You can run discord via command line with extra flags
+```sh
+dvm run canary <extra args>
+# for example
+dvm run canary --idk-some-chromium-flag-or-something
+```
+
+# Completions
+Get shell completions for your shell of choice
+```sh
+dvm completions zsh
+```

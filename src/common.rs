@@ -1,4 +1,4 @@
-pub const VERSION: &str = "1.1.4";
+pub const VERSION: &str = "1.1.8";
 pub const INSTALL_DESC: &str = "install the latest <type> of discord";
 pub const INSTALL_ALIASES: &[&str] = &["i", "in", "get"];
 pub const UPDATE_DESC: &str = "update to the latest <type> of discord";
@@ -10,7 +10,7 @@ pub const SHOW_ALIASES: &[&str] = &["s", "installed", "all", "a", "versions", "t
 pub const COMP_DESC: &str = "get shell completions";
 pub const COMP_ALIASES: &[&str] = &["c", "comp"];
 pub const RUN_DESC: &str = "run discord with specific options";
-pub const RUN_ALIASES: &[&str] =  &["r", "start", "s"];
+pub const RUN_ALIASES: &[&str] =  &["r", "start"];
 
 pub const POSSIBLE_SHELLS: &[&str] = &[
   "bash", "b",

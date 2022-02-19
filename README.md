@@ -1,7 +1,35 @@
 # dvm (Discord Version Manager)
 Allowing you to manage all of your discord versions. This was made as I was impatient to waiting for AUR maintainers (no offense 😂 we have lives) to update discord packages. This solves that problem: since you can update your version by just doing `dvm update <type>`. This utility is heavily inspired by the [`rustup` command line tool](https://rustup.rs)
 
+# Installing
+## <img src="https://www.vectorlogo.zone/logos/archlinux/archlinux-icon.svg" height="20"/> Arch Linux
+You can install the binary version of dvm through the [`dvm` AUR package](https://aur.archlinux.org/packages/dvm)
 
+Or you can compile from source using the [`dvm-git` AUR package](https://aur.archlinux.org/packages/dvm)
+
+## Other Distros
+At the moment I haven't bothered making this available on other package managers as the issue dvm wants to solve usually isn't present in those other distros.
+### Compiling from Source
+If you prefer compiling from source you can do the following
+
+#### Prequisites
+* Rust Nightly ([rustup](https://rustup.rs) or your distro might provide a `rustup` package, then `rustup install nightly`)
+```sh
+git clone https://github.com/diced/dvm
+cd dvm
+cargo +nightly build # make sure you have rust nightly installed like stated above
+```
+
+### Using prebuilt binary
+If you don't want to bother compiling from source then you may use the precompiled binary that I provide on the [releases page](https://github.com/diced/dvm/releases)
+
+*Note: The precompiled binary is not a statically compiled binary, so if it happens to error, run `ldd dvm-x86_64-unknown-linux-gnu` and it will show the libraries it needs, then install them.*
+
+```sh
+wget https://github.com/diced/dvm/releases/download/<version>/dvm-x86_64-unknown-linux-gnu
+chmod +x dvm
+./dvm # you can move it into /usr/bin or move it into somewhere then add it to $PATH
+```
 # Usage
 ```
 dvm 1.1.8
@@ -23,7 +51,7 @@ SUBCOMMANDS:
     update         update to the latest <type> of discord
 ```
 
-# Installing
+# Installing Discord
 To install a specific version just type in
 ```sh
 dvm install stable

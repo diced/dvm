@@ -32,7 +32,7 @@ chmod +x dvm
 ```
 # Usage
 ```
-dvm 1.1.8
+dvm 1.1.9
 
 USAGE:
     dvm <SUBCOMMAND>
@@ -42,13 +42,14 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    completions    get shell completions
-    help           Prints this message or the help of the given subcommand(s)
-    install        install the latest <type> of discord
-    remove         remove the installed <type> of discord
-    run            run discord with specific options
-    show           show all installed versions
-    update         update to the latest <type> of discord
+    completions          get shell completions
+    help                 Prints this message or the help of the given subcommand(s)
+    install              install the latest <type> of discord
+    install-open-asar    install openasar for <type> of discord
+    remove               remove the installed <type> of discord
+    run                  run discord with specific options
+    show                 show all installed versions
+    update               update to the latest <type> of discord
 ```
 
 # Installing Discord
@@ -60,7 +61,19 @@ This will do the following:
 1. Download the latest stable tarball from discord
 2. Extract it into $HOME/.dvm
 3. Create a bin file that executes the executable
-4. Copy desktop and icons to respectful folders
+4. Copy desktop and icons to their folders
+
+## Install Open Asar
+If you forget to add the flag `-o` when installing discord, you can install open asar by doing
+```sh
+dvm install-open-asar stable
+```
+...or do it when installing discord
+```sh
+dvm install stable -o
+```
+
+
 
 ## Installing multiple versions at once
 You can install multiple versions at once, they will be executed one after the other.

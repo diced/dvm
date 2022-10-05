@@ -131,10 +131,19 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
   fs::write(
     &bin_path,
     format!(
-      "#!/bin/sh\n/home/{}/.dvm/{}/{} \"$@\"\n",
-      user, pascal_pkg, pascal_pkg
+      r#"#!/usr/bin/env bash
+
+USER_FLAGS_FILE="$HOME/.dvm/{}-flags.conf"
+if [[ -f $USER_FLAGS_FILE ]]; then
+  USER_FLAGS="$(cat $USER_FLAGS_FILE | sed 's/#.*//')"
+fi
+
+exec /home/{}/.dvm/{}/{} "$@" $USER_FLAGS
+"#,
+      pkg_name, user, pascal_pkg, pascal_pkg
     ),
   )?;
+
   if verbose {
     info!("created executable bin")
   }

@@ -2,7 +2,7 @@
 compile_error!("can only be compiled on linux ;)");
 
 use clap::{AppSettings, Clap};
-use dvm::{Res, cli::{install, remove, show, update, run}, common::*, common::VERSION, completions, error, r#type::Type};
+use dvm::{Res, cli::{install, install_openasar, remove, show, update, run}, common::*, common::VERSION, completions, error, r#type::Type};
 
 #[derive(Clap, Debug)]
 #[clap(version = VERSION, setting = AppSettings::ColoredHelp)]
@@ -15,6 +15,9 @@ struct Opts {
 enum Command {
   #[clap(about = INSTALL_DESC, aliases = INSTALL_ALIASES)]
   Install(InstallOption),
+
+  #[clap(about = INSTALL_OPENASAR_DESC, aliases = INSTALL_OPENASAR_ALIASES)]
+  InstallOpenAsar(InstallOpenAsarOption),
 
   #[clap(about = UPDATE_DESC, aliases = UPDATE_ALIASES)]
   Update(UpdateOption),
@@ -39,6 +42,18 @@ struct InstallOption {
 
   #[clap(short, long)]
   verbose: bool,
+
+  #[clap(short, long)]
+  open_asar: bool
+}
+
+#[derive(Clap, Debug)]
+struct InstallOpenAsarOption {
+  #[clap(possible_values = POSSIBLE_VALUES)]
+  r#type: Vec<String>,
+
+  #[clap(short, long)]
+  verbose: bool
 }
 
 #[derive(Clap, Debug)]
@@ -98,22 +113,44 @@ fn str_to_type(s: String) -> Type {
   }
 }
 
+fn check_type_len(types: &Vec<String>) -> Res<()> {
+  if types.len() == 0 {
+    error!("no types provided");
+  }
+
+  Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Res<()> {
   let opts = Opts::parse();
 
   Ok(match opts.command {
     Command::Install(opt) => {
+      check_type_len(&opt.r#type)?;
+
       for r#type in opt.r#type {
-        install(str_to_type(r#type), opt.verbose).await?
+        install(str_to_type(r#type), opt.verbose, opt.open_asar).await?
       }
     }
+    Command::InstallOpenAsar(opt) => {
+      check_type_len(&opt.r#type)?;
+
+      for r#type in opt.r#type {
+        install_openasar(str_to_type(r#type), opt.verbose).await?
+      }
+    }
+
     Command::Update(opt) => {
+      check_type_len(&opt.r#type)?;
+
       for r#type in opt.r#type {
         update(str_to_type(r#type), opt.verbose).await?
       }
     }
     Command::Remove(opt) => {
+      check_type_len(&opt.r#type)?;
+
       for r#type in opt.r#type {
         remove(str_to_type(r#type), opt.verbose).await?
       }

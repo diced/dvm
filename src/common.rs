@@ -1,6 +1,8 @@
-pub const VERSION: &str = "1.1.8";
+pub const VERSION: &str = "1.1.9";
 pub const INSTALL_DESC: &str = "install the latest <type> of discord";
 pub const INSTALL_ALIASES: &[&str] = &["i", "in", "get"];
+pub const INSTALL_OPENASAR_DESC: &str = "install openasar for <type> of discord";
+pub const INSTALL_OPENASAR_ALIASES: &[&str] = &["asar", "oa"];
 pub const UPDATE_DESC: &str = "update to the latest <type> of discord";
 pub const UPDATE_ALIASES: &[&str] = &["u", "up", "upgrade"];
 pub const REMOVE_DESC: &str = "remove the installed <type> of discord";

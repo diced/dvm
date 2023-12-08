@@ -7,7 +7,7 @@ use std::{
 
 use colored::*;
 
-use crate::{r#type::Type, Res};
+use crate::{branch::DiscordBranch, Res};
 
 // fn dirent(dirent: DirEntry) -> Res<(String, Type)> {
 //   let rl_type = match dirent.file_name().to_str().unwrap() {
@@ -22,13 +22,13 @@ use crate::{r#type::Type, Res};
 //   Ok((version, rl_type))
 // }
 
-fn dirent_verbose(dirent: DirEntry) -> Res<(String, Type, PathBuf)> {
+fn dirent_verbose(dirent: DirEntry) -> Res<(String, DiscordBranch, PathBuf)> {
   let rl_type = match dirent.file_name().to_str().unwrap() {
-    "Discord" => Type::STABLE,
-    "DiscordCanary" => Type::CANARY,
-    "DiscordPTB" => Type::PTB,
-    "DiscordDevelopment" => Type::DEVELOPMENT,
-    _ => Type::STABLE,
+    "Discord" => DiscordBranch::STABLE,
+    "DiscordCanary" => DiscordBranch::CANARY,
+    "DiscordPTB" => DiscordBranch::PTB,
+    "DiscordDevelopment" => DiscordBranch::DEVELOPMENT,
+    _ => DiscordBranch::STABLE,
   };
   let path = dirent.path();
   let version = fs::read_to_string(path.join("version"))?.replace("\n", "");
@@ -36,7 +36,7 @@ fn dirent_verbose(dirent: DirEntry) -> Res<(String, Type, PathBuf)> {
   Ok((version, rl_type, path))
 }
 
-async fn needs_update(version: String, release_type: Type) -> Res<(bool, String)> {
+async fn needs_update(version: String, release_type: DiscordBranch) -> Res<(bool, String)> {
   let res = reqwest::get(format!(
     "https://discordapp.com/api/v8/updates/{}?platform=linux",
     release_type

@@ -2,9 +2,9 @@ use std::{env, fs, path::Path};
 
 use tokio::process::Command;
 
-use crate::{Res, error, info, r#type::Type};
+use crate::{branch::DiscordBranch, error, info, Res};
 
-pub async fn run(release_type: Type, args: Vec<String>, verbose: bool) -> Res<()> {
+pub async fn run(release_type: DiscordBranch, args: Vec<String>, verbose: bool) -> Res<()> {
   // create user var & create .dvm dirs
   let user = env::var("USER")?;
   fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
@@ -17,10 +17,10 @@ pub async fn run(release_type: Type, args: Vec<String>, verbose: bool) -> Res<()
   }
 
   let pascal_pkg = match release_type {
-    Type::STABLE => "Discord",
-    Type::PTB => "DiscordPTB",
-    Type::CANARY => "DiscordCanary",
-    Type::DEVELOPMENT => "DiscordDevelopment",
+    DiscordBranch::STABLE => "Discord",
+    DiscordBranch::PTB => "DiscordPTB",
+    DiscordBranch::CANARY => "DiscordCanary",
+    DiscordBranch::DEVELOPMENT => "DiscordDevelopment",
   };
 
   let exists = Path::new(&format!("/home/{}/.dvm/{}", user, pascal_pkg)).exists();
@@ -32,7 +32,8 @@ pub async fn run(release_type: Type, args: Vec<String>, verbose: bool) -> Res<()
   Command::new(format!("/home/{}/.dvm/{}/{}", user, pascal_pkg, pascal_pkg))
     .args(&args)
     .spawn()?
-    .wait_with_output().await?;
+    .wait_with_output()
+    .await?;
 
   Ok(())
 }

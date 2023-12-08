@@ -1,81 +1,103 @@
 #[cfg(not(target_os = "linux"))]
 compile_error!("can only be compiled on linux ;)");
 
-use clap::{AppSettings, Clap};
-use dvm::{Res, cli::{install, install_openasar, remove, show, update, run}, common::*, common::VERSION, completions, error, r#type::Type};
+use clap::{
+  builder::{
+    styling::{AnsiColor, Effects},
+    Styles,
+  },
+  CommandFactory, Parser,
+};
+use clap_complete::{generate, Shell};
+use dvm::{
+  branch::DiscordBranch,
+  cli::{install, install_openasar, remove, run, show, update},
+  error, Res,
+};
 
-#[derive(Clap, Debug)]
-#[clap(version = VERSION, setting = AppSettings::ColoredHelp)]
+fn styles() -> Styles {
+  Styles::styled()
+    .header(AnsiColor::White.on_default() | Effects::BOLD)
+    .usage(AnsiColor::White.on_default() | Effects::BOLD)
+    .literal(AnsiColor::BrightBlue.on_default())
+    .placeholder(AnsiColor::BrightGreen.on_default())
+}
+
+#[derive(Parser, Debug, Clone)]
+#[clap(
+  version = env!("CARGO_PKG_VERSION"),
+  name=env!("CARGO_PKG_NAME"),
+  bin_name=env!("CARGO_PKG_NAME"),
+  author=env!("CARGO_PKG_AUTHORS"),
+  about=env!("CARGO_PKG_DESCRIPTION"),
+  styles=styles(),
+)]
 struct Opts {
   #[clap(subcommand)]
-  command: Command
+  command: Command,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug, Clone)]
 enum Command {
-  #[clap(about = INSTALL_DESC, aliases = INSTALL_ALIASES)]
+  #[clap(about = "Install the latest <type> of discord")]
   Install(InstallOption),
 
-  #[clap(about = INSTALL_OPENASAR_DESC, aliases = INSTALL_OPENASAR_ALIASES)]
+  #[clap(about = "Install openasar for <type> of discord")]
   InstallOpenAsar(InstallOpenAsarOption),
 
-  #[clap(about = UPDATE_DESC, aliases = UPDATE_ALIASES)]
+  #[clap(about = "Update to the latest <type> of discord")]
   Update(UpdateOption),
 
-  #[clap(about = REMOVE_DESC, aliases = REMOVE_ALIASES)]
+  #[clap(about = "Remove the installed <type> of discord")]
   Remove(RemoveOption),
 
-  #[clap(about = SHOW_DESC, aliases = SHOW_ALIASES)]
-  Show(ShowOption),
+  #[clap(about = "Show all installed versions")]
+  List(ListOption),
 
-  #[clap(about = COMP_DESC, aliases = COMP_ALIASES)]
+  #[clap(about = "Get shell completions")]
   Completions(CompletionsOption),
 
-  #[clap(about = RUN_DESC, aliases = RUN_ALIASES)]
-  Run(RunOptions)
+  #[clap(about = "Run discord with specific options")]
+  Run(RunOptions),
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug, Clone)]
 struct InstallOption {
-  #[clap(possible_values = POSSIBLE_VALUES)]
-  r#type: Vec<String>,
+  r#type: Vec<DiscordBranch>,
 
   #[clap(short, long)]
   verbose: bool,
 
   #[clap(short, long)]
-  open_asar: bool
+  open_asar: bool,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug, Clone)]
 struct InstallOpenAsarOption {
-  #[clap(possible_values = POSSIBLE_VALUES)]
-  r#type: Vec<String>,
+  r#type: Vec<DiscordBranch>,
 
   #[clap(short, long)]
-  verbose: bool
+  verbose: bool,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug, Clone)]
 struct UpdateOption {
-  #[clap(possible_values = POSSIBLE_VALUES)]
-  r#type: Vec<String>,
+  r#type: Vec<DiscordBranch>,
 
   #[clap(short, long)]
   verbose: bool,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug, Clone)]
 struct RemoveOption {
-  #[clap(possible_values = POSSIBLE_VALUES)]
-  r#type: Vec<String>,
+  r#type: Vec<DiscordBranch>,
 
   #[clap(short, long)]
   verbose: bool,
 }
 
-#[derive(Clap, Debug)]
-struct ShowOption {
+#[derive(Parser, Debug, Clone)]
+struct ListOption {
   #[clap(short, long)]
   verbose: bool,
 
@@ -83,37 +105,23 @@ struct ShowOption {
   check: bool,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug, Clone)]
 struct CompletionsOption {
-  #[clap(possible_values = POSSIBLE_SHELLS)]
-  shell: String
+  shell: Shell,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug, Clone)]
 struct RunOptions {
   #[clap(short, long)]
   verbose: bool,
 
-  #[clap(possible_values = POSSIBLE_VALUES)]
-  r#type: String,
+  r#type: DiscordBranch,
 
   #[clap(last = true)]
-  args: Vec<String>
+  args: Vec<String>,
 }
 
-fn str_to_type(s: String) -> Type {
-  match s.as_str() {
-    "stable" | "discord-stable" | "s" => Type::STABLE,
-    "canary" | "discord-canary" | "c" => Type::CANARY,
-    "ptb" | "discord-ptb" | "p" => Type::PTB,
-    "development" | "dev" | "discord-development" | "d" => Type::DEVELOPMENT,
-    _ => {
-      error!("type \"{}\" does not exist", s);
-    }
-  }
-}
-
-fn check_type_len(types: &Vec<String>) -> Res<()> {
+fn check_type_len(types: &Vec<DiscordBranch>) -> Res<()> {
   if types.len() == 0 {
     error!("no types provided");
   }
@@ -130,14 +138,14 @@ async fn main() -> Res<()> {
       check_type_len(&opt.r#type)?;
 
       for r#type in opt.r#type {
-        install(str_to_type(r#type), opt.verbose, opt.open_asar).await?
+        install(r#type, opt.verbose, opt.open_asar).await?
       }
     }
     Command::InstallOpenAsar(opt) => {
       check_type_len(&opt.r#type)?;
 
       for r#type in opt.r#type {
-        install_openasar(str_to_type(r#type), opt.verbose).await?
+        install_openasar(r#type, opt.verbose).await?
       }
     }
 
@@ -145,24 +153,22 @@ async fn main() -> Res<()> {
       check_type_len(&opt.r#type)?;
 
       for r#type in opt.r#type {
-        update(str_to_type(r#type), opt.verbose).await?
+        update(r#type, opt.verbose).await?
       }
     }
     Command::Remove(opt) => {
       check_type_len(&opt.r#type)?;
 
       for r#type in opt.r#type {
-        remove(str_to_type(r#type), opt.verbose).await?
+        remove(r#type, opt.verbose).await?
       }
     }
-    Command::Show(opt) => {
-      show(opt.verbose, opt.check).await?
-    }
+    Command::List(opt) => show(opt.verbose, opt.check).await?,
     Command::Completions(opt) => {
-      completions::give_completions(&opt.shell)
+      let mut cmd = Opts::command_for_update();
+      let name = cmd.get_name().to_string();
+      generate(opt.shell, &mut cmd, name, &mut std::io::stdout())
     }
-    Command::Run(opt) => {
-      run(str_to_type(opt.r#type), opt.args.clone(), opt.verbose).await?
-    }
+    Command::Run(opt) => run(opt.r#type, opt.args.clone(), opt.verbose).await?,
   })
 }

@@ -1,8 +1,13 @@
 mod install;
 mod install_openasar;
 mod remove;
+mod run;
 mod show;
 mod update;
-mod run;
 
-pub use {install::install, install_openasar::install_openasar, remove::remove, show::show, update::update, run::run};
+pub use install::install;
+pub use install_openasar::install_openasar;
+pub use remove::remove;
+pub use run::run;
+pub use show::show;
+pub use update::update;

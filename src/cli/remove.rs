@@ -1,24 +1,24 @@
 use std::{env, fs, path::Path};
 
-use crate::{error, info, r#type::Type, success, Res};
+use crate::{branch::DiscordBranch, error, info, success, Res};
 
-pub async fn remove(release_type: Type, verbose: bool) -> Res<()> {
+pub async fn remove(release_type: DiscordBranch, verbose: bool) -> Res<()> {
   // create user var & create .dvm dirs
   let user = env::var("USER")?;
   fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
 
   let pascal_pkg = match release_type {
-    Type::STABLE => "Discord",
-    Type::PTB => "DiscordPTB",
-    Type::CANARY => "DiscordCanary",
-    Type::DEVELOPMENT => "DiscordDevelopment",
+    DiscordBranch::STABLE => "Discord",
+    DiscordBranch::PTB => "DiscordPTB",
+    DiscordBranch::CANARY => "DiscordCanary",
+    DiscordBranch::DEVELOPMENT => "DiscordDevelopment",
   };
 
   let pkg_name = match release_type {
-    Type::STABLE => "discord",
-    Type::PTB => "discord-ptb",
-    Type::CANARY => "discord-canary",
-    Type::DEVELOPMENT => "discord-development",
+    DiscordBranch::STABLE => "discord",
+    DiscordBranch::PTB => "discord-ptb",
+    DiscordBranch::CANARY => "discord-canary",
+    DiscordBranch::DEVELOPMENT => "discord-development",
   };
 
   let exists = Path::new(&format!("/home/{}/.dvm/{}", user, pascal_pkg)).exists();

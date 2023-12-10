@@ -1,8 +1,8 @@
 use std::{env, fs, path::Path};
 
-use crate::{Res, error, info, r#type::Type, success, util::install_version};
+use crate::{branch::DiscordBranch, error, info, success, util::install_version, Res};
 
-pub async fn update(release_type: Type, verbose: bool) -> Res<()> {
+pub async fn update(release_type: DiscordBranch, verbose: bool) -> Res<()> {
   // create user var & create .dvm dirs
   let user = env::var("USER")?;
   fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
@@ -15,10 +15,10 @@ pub async fn update(release_type: Type, verbose: bool) -> Res<()> {
   }
 
   let pascal_pkg = match release_type {
-    Type::STABLE => "Discord",
-    Type::PTB => "DiscordPTB",
-    Type::CANARY => "DiscordCanary",
-    Type::DEVELOPMENT => "DiscordDevelopment",
+    DiscordBranch::STABLE => "Discord",
+    DiscordBranch::PTB => "DiscordPTB",
+    DiscordBranch::CANARY => "DiscordCanary",
+    DiscordBranch::DEVELOPMENT => "DiscordDevelopment",
   };
 
   let exists = Path::new(&format!("/home/{}/.dvm/{}", user, pascal_pkg)).exists();
@@ -31,7 +31,10 @@ pub async fn update(release_type: Type, verbose: bool) -> Res<()> {
 
   success!(
     "updated {}:{} -> {}:{}",
-    release_type, version, release_type, latest
+    release_type,
+    version,
+    release_type,
+    latest
   );
 
   Ok(())

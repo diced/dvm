@@ -2,35 +2,39 @@ use std::{collections::HashMap, fs};
 
 use tokio::process::Command;
 
-use crate::{Res, error, info, r#type::Type};
+use crate::{branch::DiscordBranch, error, info, Res};
 
 fn get_version(user: &str, pascal_pkg: &str) -> String {
   fs::read_to_string(format!("/home/{}/.dvm/{}/version", user, pascal_pkg))
     .expect("could not read version file: malformed installation detected")
     .replace("\n", "")
-
 }
 
-pub async fn install_version(update: bool, release_type: Type, verbose: bool, user: String) -> Res<(String, String)> {
+pub async fn install_version(
+  update: bool,
+  release_type: DiscordBranch,
+  verbose: bool,
+  user: String,
+) -> Res<(String, String)> {
   let pkg_name = match release_type {
-    Type::STABLE => "discord",
-    Type::PTB => "discord-ptb",
-    Type::CANARY => "discord-canary",
-    Type::DEVELOPMENT => "discord-development",
+    DiscordBranch::STABLE => "discord",
+    DiscordBranch::PTB => "discord-ptb",
+    DiscordBranch::CANARY => "discord-canary",
+    DiscordBranch::DEVELOPMENT => "discord-development",
   };
 
   let pascal_pkg = match release_type {
-    Type::STABLE => "Discord",
-    Type::PTB => "DiscordPTB",
-    Type::CANARY => "DiscordCanary",
-    Type::DEVELOPMENT => "DiscordDevelopment",
+    DiscordBranch::STABLE => "Discord",
+    DiscordBranch::PTB => "DiscordPTB",
+    DiscordBranch::CANARY => "DiscordCanary",
+    DiscordBranch::DEVELOPMENT => "DiscordDevelopment",
   };
 
   let dl_sub = match release_type {
-    Type::STABLE => "dl",
-    Type::PTB => "dl-ptb",
-    Type::CANARY => "dl-canary",
-    Type::DEVELOPMENT => "dl-development",
+    DiscordBranch::STABLE => "dl",
+    DiscordBranch::PTB => "dl-ptb",
+    DiscordBranch::CANARY => "dl-canary",
+    DiscordBranch::DEVELOPMENT => "dl-development",
   };
 
   // request api for latest version
@@ -61,10 +65,7 @@ pub async fn install_version(update: bool, release_type: Type, verbose: bool, us
     }
 
     if version.eq(latest) {
-      error!(
-        "you already have the latest version of {}",
-        release_type
-      );
+      error!("you already have the latest version of {}", release_type);
     }
 
     // remove installed to make room for upgrade

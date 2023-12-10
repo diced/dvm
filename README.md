@@ -3,12 +3,13 @@ Allowing you to manage all of your discord versions. This was made as I was impa
 
 # Installing
 ## <img src="https://www.vectorlogo.zone/logos/archlinux/archlinux-icon.svg" height="20"/> Arch Linux
-You can install the binary version of dvm through the [`dvm` AUR package](https://aur.archlinux.org/packages/dvm)
+You can install the binary version of dvm through the [`dvm` AUR package](https://aur.archlinux.org/packages/dvm) or [`dvm-bin` AUR package](https://aur.archlinux.org/packages/dvm-bin)
 
 Or you can compile from source using the [`dvm-git` AUR package](https://aur.archlinux.org/packages/dvm)
 
 ## Other Distros
 At the moment I haven't bothered making this available on other package managers as the issue dvm wants to solve usually isn't present in those other distros.
+
 ### Compiling from Source
 If you prefer compiling from source you can do the following
 
@@ -32,24 +33,23 @@ chmod +x dvm
 ```
 # Usage
 ```
-dvm 1.1.9
+discord version manager for linux
 
-USAGE:
-    dvm <SUBCOMMAND>
+Usage: dvm <COMMAND>
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+Commands:
+  install            Install the latest <type> of discord
+  install-open-asar  Install openasar for <type> of discord
+  update             Update to the latest <type> of discord
+  remove             Remove the installed <type> of discord
+  list               Show all installed versions
+  completions        Get shell completions
+  run                Run discord with specific options
+  help               Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    completions          get shell completions
-    help                 Prints this message or the help of the given subcommand(s)
-    install              install the latest <type> of discord
-    install-open-asar    install openasar for <type> of discord
-    remove               remove the installed <type> of discord
-    run                  run discord with specific options
-    show                 show all installed versions
-    update               update to the latest <type> of discord
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
 # Installing Discord
@@ -72,8 +72,6 @@ dvm install-open-asar stable
 ```sh
 dvm install stable -o
 ```
-
-
 
 ## Installing multiple versions at once
 You can install multiple versions at once, they will be executed one after the other.
@@ -134,3 +132,7 @@ Get shell completions for your shell of choice
 ```sh
 dvm completions zsh
 ```
+
+
+# Maintaining
+I don't really focus on this anymore, but I'll try my best lol. If you want to reach out to help feel free to send a message request or friend request on discord (`@dicedtomato`), or contact through github issues, etc.

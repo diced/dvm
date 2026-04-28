@@ -21,3 +21,20 @@ jobs:
       - name: Cargo check
         run: cargo check
 
+      - name: Cargo build (debug)
+        run: cargo build
+
+      - name: Package debug artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp target/debug/dvm dist/dvm
+          tar -C dist -czf dvm-debug-linux-x86_64.tar.gz dvm
+
+      - name: Upload debug artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dvm-debug-linux-x86_64
+          path: dvm-debug-linux-x86_64.tar.gz
+

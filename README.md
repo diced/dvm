@@ -2,13 +2,7 @@
 Allowing you to manage all of your discord versions. This was made as I was impatient to waiting for AUR maintainers (no offense 😂 we have lives) to update discord packages. This solves that problem: since you can update your version by just doing `dvm update <type>`. This utility is heavily inspired by the [`rustup` command line tool](https://rustup.rs)
 
 # Installing
-## <img src="https://www.vectorlogo.zone/logos/archlinux/archlinux-icon.svg" height="20"/> Arch Linux
-You can install the binary version of dvm through the [`dvm` AUR package](https://aur.archlinux.org/packages/dvm) or [`dvm-bin` AUR package](https://aur.archlinux.org/packages/dvm-bin)
-
-Or you can compile from source using the [`dvm-git` AUR package](https://aur.archlinux.org/packages/dvm)
-
-## Other Distros
-At the moment I haven't bothered making this available on other package managers as the issue dvm wants to solve usually isn't present in those other distros.
+Grab the latest release, and extract the tar ball.
 
 ### Compiling from Source
 If you prefer compiling from source you can do the following
@@ -27,7 +21,7 @@ If you don't want to bother compiling from source then you may use the precompil
 *Note: The precompiled binary is not a statically compiled binary, so if it happens to error, run `ldd dvm-x86_64-unknown-linux-gnu` and it will show the libraries it needs, then install them.*
 
 ```sh
-wget https://github.com/diced/dvm/releases/download/<version>/dvm-x86_64-unknown-linux-gnu
+wget https://github.com/diced/dvm/releases/download/<version>/dvm
 chmod +x dvm
 ./dvm # you can move it into /usr/bin or move it into somewhere then add it to $PATH
 ```
@@ -103,10 +97,10 @@ This will do the following:
 # Show
 This will show all installations that are currently installed, the `--verbose, -v` flag will show the path it's installed to, and the `--check, -c` flag will check if your installations are up-to-date (red = outdated, green = up to date)
 ```sh
-dvm show
-dvm show -v
-dvm show -c
-dvm show -vc
+dvm list
+dvm list -v
+dvm list -c
+dvm list -vc
 ```
 ```sh
 # no flag

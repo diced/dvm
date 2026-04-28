@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, path::Path};
 
 use tokio::process::Command;
 
@@ -99,23 +99,51 @@ pub async fn install_version(
     dvm_path::install_dir(release_type)?.display()
   );
 
-  // change Exec= to dvm path from the desktop file
-  let desktop_file = dvm_path::install_dir(release_type)?.join(format!("{}.desktop", pkg_name));
-  Command::new("sed")
-    .arg("-i")
-    .arg(format!(
-      "s#/usr/share/{}/{}#{}/{}#",
-      pkg_name,
-      pascal_pkg,
-      dvm_path::dvm_bin_dir()?.display(),
-      pkg_name
-    ))
-    .arg(&desktop_file)
-    .spawn()?
-    .wait()
-    .await?;
-  if verbose {
-    info!("changing bin locations in desktop entries")
+  // newer versions of discord come with a updater bootstrap executable that can be run to dl
+  let install_dir = dvm_path::install_dir(release_type)?;
+  let bootstrap = install_dir.join("updater_bootstrap");
+  if bootstrap.exists() {
+    let channel = release_type.to_string();
+    let output = Command::new(&bootstrap)
+      .arg("--no-zenity")
+      .arg(&install_dir)
+      .arg(channel)
+      .arg("https://updates.discord.com/")
+      .output()
+      .await?;
+
+    if verbose {
+      info!(
+        "ran updater_bootstrap (status: {})",
+        output.status.code().unwrap_or(-1)
+      );
+    }
+
+    if !output.status.success() {
+      info!("updater_bootstrap failed; continuing with extracted files");
+    }
+  }
+
+  let app_dir = dvm_path::app_dir(release_type)?;
+
+  let desktop_file = app_dir.join(format!("{}.desktop", pkg_name));
+  if Path::new(&desktop_file).exists() {
+    Command::new("sed")
+      .arg("-i")
+      .arg(format!(
+        "s#/usr/share/{}/{}#{}/{}#",
+        pkg_name,
+        pascal_pkg,
+        dvm_path::dvm_bin_dir()?.display(),
+        pkg_name
+      ))
+      .arg(&desktop_file)
+      .spawn()?
+      .wait()
+      .await?;
+    if verbose {
+      info!("changing bin locations in desktop entries")
+    }
   }
 
   // write a shell script to .dvm/bin to run discord
@@ -133,7 +161,7 @@ fi
 exec "{}/{}" "$@" $USER_FLAGS
 "#,
       pkg_name,
-      dvm_path::install_dir(release_type)?.display(),
+      install_dir.display(),
       pascal_pkg
     ),
   )?;
@@ -155,26 +183,30 @@ exec "{}/{}" "$@" $USER_FLAGS
 
   // copy desktop file to .local/share/applications
   let local_apps_dir = dvm_path::home_dir()?.join(".local").join("share").join("applications");
-  Command::new("install")
-    .arg("-Dm644")
-    .arg(&desktop_file)
-    .arg(&local_apps_dir)
-    .spawn()?
-    .wait()
-    .await?;
-  info!("installing desktop file");
+  if Path::new(&desktop_file).exists() {
+    Command::new("install")
+      .arg("-Dm644")
+      .arg(&desktop_file)
+      .arg(&local_apps_dir)
+      .spawn()?
+      .wait()
+      .await?;
+    info!("installing desktop file");
+  }
 
   // copy icon to .local/share/icons
   let local_icons_dir = dvm_path::home_dir()?.join(".local").join("share").join("icons");
   fs::create_dir_all(&local_icons_dir)?;
-  let icon_file = dvm_path::install_dir(release_type)?.join("discord.png");
-  Command::new("cp")
-    .arg(&icon_file)
-    .arg(local_icons_dir.join(format!("{}.png", pkg_name)))
-    .spawn()?
-    .wait()
-    .await?;
-  info!("installing icons");
+  let icon_file = app_dir.join("discord.png");
+  if Path::new(&icon_file).exists() {
+    Command::new("cp")
+      .arg(&icon_file)
+      .arg(local_icons_dir.join(format!("{}.png", pkg_name)))
+      .spawn()?
+      .wait()
+      .await?;
+    info!("installing icons");
+  }
 
   // create a file that contains the current version to use for updating
   fs::write(dvm_path::version_file(release_type)?, latest)?;

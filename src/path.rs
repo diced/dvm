@@ -1,5 +1,6 @@
 use std::{
   env,
+  fs,
   path::PathBuf,
 };
 
@@ -48,4 +49,26 @@ pub fn install_dir(branch: DiscordBranch) -> Res<PathBuf> {
 
 pub fn version_file(branch: DiscordBranch) -> Res<PathBuf> {
   Ok(install_dir(branch)?.join("version"))
+}
+
+pub fn app_dir(branch: DiscordBranch) -> Res<PathBuf> {
+  let install = install_dir(branch)?;
+  let direct = install.join("resources").join("app.asar");
+  if direct.exists() {
+    return Ok(install);
+  }
+
+  for entry in fs::read_dir(&install)? {
+    let entry = entry?;
+    let path = entry.path();
+    if !path.is_dir() {
+      continue;
+    }
+    let candidate = path.join("resources").join("app.asar");
+    if candidate.exists() {
+      return Ok(path);
+    }
+  }
+
+  Ok(install)
 }

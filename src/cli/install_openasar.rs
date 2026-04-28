@@ -14,7 +14,7 @@ pub async fn install_openasar(release_type: DiscordBranch, verbose: bool) -> Res
     error!("{} is not installed", release_type);
   }
 
-  let asar_file = dvm_path::install_dir(release_type)?
+  let asar_file = dvm_path::app_dir(release_type)?
     .join("resources")
     .join("app.asar");
 

@@ -24,7 +24,7 @@ pub async fn install(release_type: DiscordBranch, verbose: bool, open_asar: bool
   let (latest, _) = install_version(false, release_type, verbose).await?;
 
   if open_asar {
-    let asar_file = dvm_path::install_dir(release_type)?
+    let asar_file = dvm_path::app_dir(release_type)?
       .join("resources")
       .join("app.asar");
 

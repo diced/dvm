@@ -1,6 +1,7 @@
 pub mod branch;
 pub mod cli;
 pub mod common;
+pub mod path;
 pub mod util;
 
 pub type Res<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;

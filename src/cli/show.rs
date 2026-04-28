@@ -1,13 +1,12 @@
 use std::{
   collections::HashMap,
-  env,
   fs::{self, DirEntry},
   path::PathBuf,
 };
 
 use colored::*;
 
-use crate::{branch::DiscordBranch, Res};
+use crate::{branch::DiscordBranch, path as dvm_path, Res};
 
 // fn dirent(dirent: DirEntry) -> Res<(String, Type)> {
 //   let rl_type = match dirent.file_name().to_str().unwrap() {
@@ -54,11 +53,9 @@ async fn needs_update(version: String, release_type: DiscordBranch) -> Res<(bool
 }
 
 pub async fn show(verbose: bool, check: bool) -> Res<()> {
-  // create user var & create .dvm dirs
-  let user = env::var("USER")?;
-  fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
+  fs::create_dir_all(dvm_path::dvm_bin_dir()?)?;
 
-  let mut types = fs::read_dir(format!("/home/{}/.dvm", user))?
+  let mut types = fs::read_dir(dvm_path::dvm_dir()?)?
     .map(|x| x.unwrap())
     .filter(|x| x.file_name() != "bin")
     .map(|x| dirent_verbose(x).unwrap());

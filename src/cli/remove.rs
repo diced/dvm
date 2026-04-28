@@ -1,27 +1,11 @@
-use std::{env, fs, path::Path};
+use std::{fs, path::Path};
 
-use crate::{branch::DiscordBranch, error, info, success, Res};
+use crate::{branch::DiscordBranch, error, info, path as dvm_path, success, Res};
 
 pub async fn remove(release_type: DiscordBranch, verbose: bool) -> Res<()> {
-  // create user var & create .dvm dirs
-  let user = env::var("USER")?;
-  fs::create_dir_all(format!("/home/{}/.dvm/bin", user))?;
+  fs::create_dir_all(dvm_path::dvm_bin_dir()?)?;
 
-  let pascal_pkg = match release_type {
-    DiscordBranch::STABLE => "Discord",
-    DiscordBranch::PTB => "DiscordPTB",
-    DiscordBranch::CANARY => "DiscordCanary",
-    DiscordBranch::DEVELOPMENT => "DiscordDevelopment",
-  };
-
-  let pkg_name = match release_type {
-    DiscordBranch::STABLE => "discord",
-    DiscordBranch::PTB => "discord-ptb",
-    DiscordBranch::CANARY => "discord-canary",
-    DiscordBranch::DEVELOPMENT => "discord-development",
-  };
-
-  let exists = Path::new(&format!("/home/{}/.dvm/{}", user, pascal_pkg)).exists();
+  let exists = Path::new(&dvm_path::install_dir(release_type)?).exists();
   if verbose {
     info!("checking if installation exists")
   }
@@ -30,7 +14,7 @@ pub async fn remove(release_type: DiscordBranch, verbose: bool) -> Res<()> {
     error!("{} not installed", release_type);
   }
 
-  let version = fs::read_to_string(format!("/home/{}/.dvm/{}/version", user, pascal_pkg))
+  let version = fs::read_to_string(dvm_path::version_file(release_type)?)
     .expect("could not read version file: malformed installation detected");
   if verbose {
     info!("reading version file")
@@ -39,31 +23,37 @@ pub async fn remove(release_type: DiscordBranch, verbose: bool) -> Res<()> {
   info!("removing version {}:{}", release_type, version);
 
   // remove all {release type} associated files
-  fs::remove_dir_all(format!("/home/{}/.dvm/{}", user, pascal_pkg))
+  fs::remove_dir_all(dvm_path::install_dir(release_type)?)
     .expect("error when removing data dirs");
   if verbose {
     info!("removed data dirs")
   }
 
-  fs::remove_file(format!("/home/{}/.dvm/bin/{}", user, pkg_name))
+  fs::remove_file(dvm_path::dvm_bin_dir()?.join(dvm_path::pkg_name(release_type)))
     .expect("error when removing bin file");
   if verbose {
     info!("removed bin file")
   }
 
-  fs::remove_file(format!(
-    "/home/{}/.local/share/applications/{}.desktop",
-    user, pkg_name
-  ))
-  .expect("error when removing desktop file");
+  fs::remove_file(
+    dvm_path::home_dir()?
+      .join(".local")
+      .join("share")
+      .join("applications")
+      .join(format!("{}.desktop", dvm_path::pkg_name(release_type))),
+  )
+    .expect("error when removing desktop file");
   if verbose {
     info!("removed desktop file")
   }
 
-  fs::remove_file(format!(
-    "/home/{}/.local/share/icons/{}.png",
-    user, pkg_name
-  ))
+  fs::remove_file(
+    dvm_path::home_dir()?
+      .join(".local")
+      .join("share")
+      .join("icons")
+      .join(format!("{}.png", dvm_path::pkg_name(release_type))),
+  )
   .expect("error when removing icon");
   if verbose {
     info!("removed icon")

@@ -2,33 +2,23 @@ use std::{collections::HashMap, fs};
 
 use tokio::process::Command;
 
-use crate::{branch::DiscordBranch, error, info, Res};
+use crate::{branch::DiscordBranch, error, info, path as dvm_path, Res};
 
-fn get_version(user: &str, pascal_pkg: &str) -> String {
-  fs::read_to_string(format!("/home/{}/.dvm/{}/version", user, pascal_pkg))
-    .expect("could not read version file: malformed installation detected")
-    .replace("\n", "")
+fn get_version(branch: DiscordBranch) -> Res<String> {
+  Ok(
+    fs::read_to_string(dvm_path::version_file(branch)?)
+      .expect("could not read version file: malformed installation detected")
+      .replace("\n", ""),
+  )
 }
 
 pub async fn install_version(
   update: bool,
   release_type: DiscordBranch,
   verbose: bool,
-  user: String,
 ) -> Res<(String, String)> {
-  let pkg_name = match release_type {
-    DiscordBranch::STABLE => "discord",
-    DiscordBranch::PTB => "discord-ptb",
-    DiscordBranch::CANARY => "discord-canary",
-    DiscordBranch::DEVELOPMENT => "discord-development",
-  };
-
-  let pascal_pkg = match release_type {
-    DiscordBranch::STABLE => "Discord",
-    DiscordBranch::PTB => "DiscordPTB",
-    DiscordBranch::CANARY => "DiscordCanary",
-    DiscordBranch::DEVELOPMENT => "DiscordDevelopment",
-  };
+  let pkg_name = dvm_path::pkg_name(release_type);
+  let pascal_pkg = dvm_path::pascal_pkg(release_type);
 
   let dl_sub = match release_type {
     DiscordBranch::STABLE => "dl",
@@ -58,7 +48,7 @@ pub async fn install_version(
 
   let mut version = String::new();
   if update {
-    version = get_version(&user, pascal_pkg);
+    version = get_version(release_type)?;
     // check if the version is the same & clean file of \n's
     if verbose {
       info!("checking if existing version and latest match")
@@ -69,7 +59,7 @@ pub async fn install_version(
     }
 
     // remove installed to make room for upgrade
-    fs::remove_dir_all(format!("/home/{}/.dvm/{}", user, pascal_pkg))?;
+    fs::remove_dir_all(dvm_path::install_dir(release_type)?)?;
     info!("removing old components");
   }
 
@@ -100,26 +90,27 @@ pub async fn install_version(
     .arg("xf")
     .arg(&tmp_file)
     .arg("-C")
-    .arg(format!("/home/{}/.dvm/", user))
+    .arg(dvm_path::dvm_dir()?)
     .spawn()?
     .wait()
     .await?;
   info!(
     "extracting components to {}",
-    format!("/home/{}/.dvm/{}", user, pascal_pkg)
+    dvm_path::install_dir(release_type)?.display()
   );
 
   // change Exec= to dvm path from the desktop file
+  let desktop_file = dvm_path::install_dir(release_type)?.join(format!("{}.desktop", pkg_name));
   Command::new("sed")
     .arg("-i")
     .arg(format!(
-      "s#/usr/share/{}/{}#/home/{}/.dvm/bin/{}#",
-      pkg_name, pascal_pkg, user, pkg_name
+      "s#/usr/share/{}/{}#{}/{}#",
+      pkg_name,
+      pascal_pkg,
+      dvm_path::dvm_bin_dir()?.display(),
+      pkg_name
     ))
-    .arg(format!(
-      "/home/{}/.dvm/{}/{}.desktop",
-      user, pascal_pkg, pkg_name
-    ))
+    .arg(&desktop_file)
     .spawn()?
     .wait()
     .await?;
@@ -128,7 +119,7 @@ pub async fn install_version(
   }
 
   // write a shell script to .dvm/bin to run discord
-  let bin_path = format!("/home/{}/.dvm/bin/{}", user, pkg_name);
+  let bin_path = dvm_path::dvm_bin_dir()?.join(pkg_name);
   fs::write(
     &bin_path,
     format!(
@@ -139,9 +130,11 @@ if [[ -f $USER_FLAGS_FILE ]]; then
   USER_FLAGS="$(cat $USER_FLAGS_FILE | sed 's/#.*//')"
 fi
 
-exec /home/{}/.dvm/{}/{} "$@" $USER_FLAGS
+exec "{}/{}" "$@" $USER_FLAGS
 "#,
-      pkg_name, user, pascal_pkg, pascal_pkg
+      pkg_name,
+      dvm_path::install_dir(release_type)?.display(),
+      pascal_pkg
     ),
   )?;
 
@@ -152,7 +145,7 @@ exec /home/{}/.dvm/{}/{} "$@" $USER_FLAGS
   // make bin executable
   Command::new("chmod")
     .arg("+x")
-    .arg(bin_path)
+    .arg(&bin_path)
     .spawn()?
     .wait()
     .await?;
@@ -161,36 +154,30 @@ exec /home/{}/.dvm/{}/{} "$@" $USER_FLAGS
   }
 
   // copy desktop file to .local/share/applications
+  let local_apps_dir = dvm_path::home_dir()?.join(".local").join("share").join("applications");
   Command::new("install")
     .arg("-Dm644")
-    .arg(format!(
-      "/home/{}/.dvm/{}/{}.desktop",
-      user, pascal_pkg, pkg_name
-    ))
-    .arg(format!("/home/{}/.local/share/applications", user))
+    .arg(&desktop_file)
+    .arg(&local_apps_dir)
     .spawn()?
     .wait()
     .await?;
   info!("installing desktop file");
 
   // copy icon to .local/share/icons
-  fs::create_dir_all(format!("/home/{}/.local/share/icons", user))?;
+  let local_icons_dir = dvm_path::home_dir()?.join(".local").join("share").join("icons");
+  fs::create_dir_all(&local_icons_dir)?;
+  let icon_file = dvm_path::install_dir(release_type)?.join("discord.png");
   Command::new("cp")
-    .arg(format!("/home/{}/.dvm/{}/discord.png", user, pascal_pkg))
-    .arg(format!(
-      "/home/{}/.local/share/icons/{}.png",
-      user, pkg_name
-    ))
+    .arg(&icon_file)
+    .arg(local_icons_dir.join(format!("{}.png", pkg_name)))
     .spawn()?
     .wait()
     .await?;
   info!("installing icons");
 
   // create a file that contains the current version to use for updating
-  fs::write(
-    format!("/home/{}/.dvm/{}/version", user, pascal_pkg),
-    latest,
-  )?;
+  fs::write(dvm_path::version_file(release_type)?, latest)?;
   if verbose {
     info!("created version file")
   }

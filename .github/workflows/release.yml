@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Compute version + decide release
+        id: ver
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="$(grep -m1 '^version[[:space:]]*=' Cargo.toml | sed -E 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/')"
+          if [[ -z "${VERSION}" ]]; then
+            echo "Failed to read version from Cargo.toml" >&2
+            exit 1
+          fi
+
+          TAG="v${VERSION}"
+
+          LATEST_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n 1 || true)"
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "latest_tag=${LATEST_TAG}" >> "$GITHUB_OUTPUT"
+
+          if [[ "${TAG}" == "${LATEST_TAG}" ]]; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (release)
+        if: steps.ver.outputs.should_release == 'true'
+        run: cargo build --release
+
+      - name: Package artifact
+        if: steps.ver.outputs.should_release == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp target/release/dvm dist/dvm
+          tar -C dist -czf "dvm-${{ steps.ver.outputs.version }}-linux-x86_64.tar.gz" dvm
+
+      - name: Create GitHub Release
+        if: steps.ver.outputs.should_release == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "${{ steps.ver.outputs.tag }}" \
+            "dvm-${{ steps.ver.outputs.version }}-linux-x86_64.tar.gz" \
+            --title "dvm ${{ steps.ver.outputs.version }}" \
+            --notes "Automated release for version ${{ steps.ver.outputs.version }}."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

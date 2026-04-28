@@ -8,19 +8,6 @@ use colored::*;
 
 use crate::{branch::DiscordBranch, path as dvm_path, Res};
 
-// fn dirent(dirent: DirEntry) -> Res<(String, Type)> {
-//   let rl_type = match dirent.file_name().to_str().unwrap() {
-//     "Discord" => Type::STABLE,
-//     "DiscordCanary" => Type::CANARY,
-//     "DiscordPTB" => Type::PTB,
-//     "DiscordDevelopment" => Type::DEVELOPMENT,
-//     _ => Type::STABLE,
-//   };
-//   let version = fs::read_to_string(dirent.path().join("version"))?.replace("\n", "");
-
-//   Ok((version, rl_type))
-// }
-
 fn dirent_verbose(dirent: DirEntry) -> Res<(String, DiscordBranch, PathBuf)> {
   let rl_type = match dirent.file_name().to_str().unwrap() {
     "Discord" => DiscordBranch::STABLE,

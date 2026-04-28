@@ -16,7 +16,7 @@ pub async fn run(release_type: DiscordBranch, args: Vec<String>, verbose: bool) 
     error!("{} is not installed", release_type);
   }
 
-  Command::new(dvm_path::install_dir(release_type)?.join(dvm_path::pkg_name(release_type)))
+  Command::new(dvm_path::app_dir(release_type)?.join(dvm_path::pascal_pkg(release_type)))
     .args(&args)
     .spawn()?
     .wait_with_output()

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, fs};
 
 use tokio::process::Command;
 
@@ -124,20 +124,19 @@ pub async fn install_version(
     }
   }
 
-  let app_dir = dvm_path::app_dir(release_type)?;
+  // patch desktop entry to point to dvm launcher bin
+  let desktop_source = install_dir.join(format!("{}.desktop", pkg_name));
 
-  let desktop_file = app_dir.join(format!("{}.desktop", pkg_name));
-  if Path::new(&desktop_file).exists() {
+  if desktop_source.exists() {
     Command::new("sed")
       .arg("-i")
       .arg(format!(
-        "s#/usr/share/{}/{}#{}/{}#",
+        "s#/usr/bin/{}#{}/{}#",
         pkg_name,
-        pascal_pkg,
         dvm_path::dvm_bin_dir()?.display(),
         pkg_name
       ))
-      .arg(&desktop_file)
+      .arg(&desktop_source)
       .spawn()?
       .wait()
       .await?;
@@ -158,7 +157,15 @@ if [[ -f $USER_FLAGS_FILE ]]; then
   USER_FLAGS="$(cat $USER_FLAGS_FILE | sed 's/#.*//')"
 fi
 
-exec "{}/{}" "$@" $USER_FLAGS
+INSTALL_DIR="{}"
+BIN_NAME="{}"
+APP_DIR="$(find "$INSTALL_DIR" -maxdepth 1 -type d -name 'app-*' 2>/dev/null | sort -V | tail -n 1)"
+
+if [[ -n "$APP_DIR" && -x "$APP_DIR/$BIN_NAME" ]]; then
+  exec "$APP_DIR/$BIN_NAME" "$@" $USER_FLAGS
+fi
+
+exec "$INSTALL_DIR/$BIN_NAME" "$@" $USER_FLAGS
 "#,
       pkg_name,
       install_dir.display(),
@@ -183,28 +190,21 @@ exec "{}/{}" "$@" $USER_FLAGS
 
   // copy desktop file to .local/share/applications
   let local_apps_dir = dvm_path::home_dir()?.join(".local").join("share").join("applications");
-  if Path::new(&desktop_file).exists() {
-    Command::new("install")
-      .arg("-Dm644")
-      .arg(&desktop_file)
-      .arg(&local_apps_dir)
-      .spawn()?
-      .wait()
-      .await?;
+  if desktop_source.exists() {
+    fs::create_dir_all(&local_apps_dir)?;
+    fs::copy(
+      &desktop_source,
+      local_apps_dir.join(format!("{}.desktop", pkg_name)),
+    )?;
     info!("installing desktop file");
   }
 
   // copy icon to .local/share/icons
   let local_icons_dir = dvm_path::home_dir()?.join(".local").join("share").join("icons");
   fs::create_dir_all(&local_icons_dir)?;
-  let icon_file = app_dir.join("discord.png");
-  if Path::new(&icon_file).exists() {
-    Command::new("cp")
-      .arg(&icon_file)
-      .arg(local_icons_dir.join(format!("{}.png", pkg_name)))
-      .spawn()?
-      .wait()
-      .await?;
+  let icon_file = install_dir.join("discord.png");
+  if icon_file.exists() {
+    fs::copy(&icon_file, local_icons_dir.join(format!("{}.png", pkg_name)))?;
     info!("installing icons");
   }
 

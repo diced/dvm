@@ -1,4 +1,8 @@
-use std::{fs, path::Path};
+use std::{
+  fs,
+  io::ErrorKind,
+  path::Path,
+};
 
 use crate::{branch::DiscordBranch, error, info, path as dvm_path, success, Res};
 
@@ -14,8 +18,7 @@ pub async fn remove(release_type: DiscordBranch, verbose: bool) -> Res<()> {
     error!("{} not installed", release_type);
   }
 
-  let version = fs::read_to_string(dvm_path::version_file(release_type)?)
-    .expect("could not read version file: malformed installation detected");
+  let version = fs::read_to_string(dvm_path::version_file(release_type)?)?;
   if verbose {
     info!("reading version file")
   }
@@ -23,38 +26,49 @@ pub async fn remove(release_type: DiscordBranch, verbose: bool) -> Res<()> {
   info!("removing version {}:{}", release_type, version);
 
   // remove all {release type} associated files
-  fs::remove_dir_all(dvm_path::install_dir(release_type)?)
-    .expect("error when removing data dirs");
+  if let Err(e) = fs::remove_dir_all(dvm_path::install_dir(release_type)?) {
+    if e.kind() != ErrorKind::NotFound {
+      return Err(e.into());
+    }
+  }
   if verbose {
     info!("removed data dirs")
   }
 
-  fs::remove_file(dvm_path::dvm_bin_dir()?.join(dvm_path::pkg_name(release_type)))
-    .expect("error when removing bin file");
+  let bin_file = dvm_path::dvm_bin_dir()?.join(dvm_path::pkg_name(release_type));
+  if let Err(e) = fs::remove_file(&bin_file) {
+    if e.kind() != ErrorKind::NotFound {
+      return Err(e.into());
+    }
+  }
   if verbose {
     info!("removed bin file")
   }
 
-  fs::remove_file(
-    dvm_path::home_dir()?
-      .join(".local")
-      .join("share")
-      .join("applications")
-      .join(format!("{}.desktop", dvm_path::pkg_name(release_type))),
-  )
-    .expect("error when removing desktop file");
+  let desktop_file = dvm_path::home_dir()?
+    .join(".local")
+    .join("share")
+    .join("applications")
+    .join(format!("{}.desktop", dvm_path::pkg_name(release_type)));
+  if let Err(e) = fs::remove_file(&desktop_file) {
+    if e.kind() != ErrorKind::NotFound {
+      return Err(e.into());
+    }
+  }
   if verbose {
     info!("removed desktop file")
   }
 
-  fs::remove_file(
-    dvm_path::home_dir()?
-      .join(".local")
-      .join("share")
-      .join("icons")
-      .join(format!("{}.png", dvm_path::pkg_name(release_type))),
-  )
-  .expect("error when removing icon");
+  let icon_file = dvm_path::home_dir()?
+    .join(".local")
+    .join("share")
+    .join("icons")
+    .join(format!("{}.png", dvm_path::pkg_name(release_type)));
+  if let Err(e) = fs::remove_file(&icon_file) {
+    if e.kind() != ErrorKind::NotFound {
+      return Err(e.into());
+    }
+  }
   if verbose {
     info!("removed icon")
   }

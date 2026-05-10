@@ -58,16 +58,39 @@ pub fn app_dir(branch: DiscordBranch) -> Res<PathBuf> {
     return Ok(install);
   }
 
+  let mut best_match: Option<(Vec<u32>, PathBuf)> = None;
   for entry in fs::read_dir(&install)? {
     let entry = entry?;
     let path = entry.path();
     if !path.is_dir() {
       continue;
     }
+
+    let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+      continue;
+    };
+    let Some(version) = name.strip_prefix("app-") else {
+      continue;
+    };
+
     let candidate = path.join("resources").join("app.asar");
-    if candidate.exists() {
-      return Ok(path);
+    if !candidate.exists() {
+      continue;
     }
+
+    let parsed = version
+      .split('.')
+      .map(|part| part.parse::<u32>().unwrap_or(0))
+      .collect::<Vec<_>>();
+
+    match &best_match {
+      Some((best_version, _)) if &parsed <= best_version => {}
+      _ => best_match = Some((parsed, path)),
+    }
+  }
+
+  if let Some((_, path)) = best_match {
+    return Ok(path);
   }
 
   Ok(install)

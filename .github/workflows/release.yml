@@ -9,7 +9,6 @@ permissions:
   contents: write
 
 jobs:
-  # --- Stage 1: Determine if we need to release ---
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -42,7 +41,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # --- Stage 2: Build and Upload per Architecture ---
   build-release:
     needs: check
     if: needs.check.outputs.should_release == 'true'
